@@ -1,0 +1,14 @@
+La base de datos Octogatos tiene que ser creada desde el administrador
+de base de datos de Postgres: psql. Ya en psql escribimos y
+ejecutamos el siguiente comando:
+
+CREATE DATABASE octogatos;
+
+Nos salimos del administrador usando: exit.
+Y escribimos el siguiente comando para que nuestra base de datos
+tenga las tablas que queremos.
+
+psql -d octogatos -f database.sql
+
+Y listo, nuesta base de datos esta lista para que pueda recibir
+información.
