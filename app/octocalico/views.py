@@ -6,22 +6,21 @@ from django.contrib.auth.models import User, auth
 from django.contrib import messages
 
 
-def index(request):
-
+def login(request):
     if request.method == 'POST':
         username = request.POST['username']
         password = request.POST['password']
 
-        user = auth.authenticate(username = username, password =password  )
+        user = auth.authenticate(username = username, password = password)
 
         if user is not None:
             auth.login(request , user)
-            return redirect('/home')
+            return redirect('/success')
         else:
             messages.info(request, 'invalid username or password')
-            return redirect("/")
+            return render(request, 'login.html', {'status' : "Invalid user or password"})
     else:
-        return render(request,'index.html')
+        return render(request,'login.html')
 
 
 def register(request):
@@ -32,16 +31,19 @@ def register(request):
         username = request.POST['username']
         password= request.POST['password']
 
-
         user = User.objects.create_user(username = username , password = password , email = email)
         user.save()
         print('user created')
-        return redirect('/custom')
+        return redirect('/home')
 
     return render(request,'register.html')
 
 def custom(request):
-    return render(request, 'custom.html')
+    return render(request, 'home.html')
+
+def success(request):
+    print(request.user)
+    return render(request, 'success.html', {'user': request.user})
 
 def home(request):
     return render(request, 'home.html')
