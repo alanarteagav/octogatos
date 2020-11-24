@@ -354,9 +354,10 @@ En el primer archivo cambiamos el valor de
 listen_addresses = '*'
 \end{lstlisting}
 
-Y también agregamos la dirección al segundo archivo:
+Y también agregamos la dirección IP privada de la App
+Server  al segundo archivo:
 \begin{lstlisting}
-host    all             all              0.0.0.0/0                       trust
+host    all             all              172.31.4.254/0                       trust
 \end{lstlisting}
 
 \begin{figure}[H]
