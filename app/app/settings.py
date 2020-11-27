@@ -81,8 +81,8 @@ DATABASES = {
     'NAME': 'postgres',
     'USER': 'postgres',
     'PASSWORD': '',
-    'HOST':'172.31.14.164',
-    'PORT': '5432',
+    'HOST':'localhost',
+    'PORT': '5433',
     }
 }
 
@@ -126,4 +126,8 @@ STATIC_URL = '/static/'
 
 LOGIN_REDIRECT_URL = '/'
 
-STATIC_ROOT = os.path.join(BASE_DIR, "static/")
+#STATIC_ROOT = os.path.join(BASE_DIR, "static/")
+
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "static/")
+]
