@@ -92,6 +92,89 @@
 
 \begin{document}
 
+\section{Registros DNS}
+
+Para realizar esta configuraci\'on, fue necesario
+actualizar los name servers de nuestro dominio,
+para que usara los name servers de Cloudflare,
+esto se configur\'o en el panel de control de
+\href{https://get.tech}{get.tech}, bajo la opci\'on
+``Name Servers''.   La configuraci\'on puede
+verse en la Figura \ref{fig:nameServers}.
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.7\textwidth]{DNS/nameServers}
+  \caption{Configuraci\'on de los name servers para
+           nuestro dominio.}
+  \label{fig:nameServers}
+\end{figure}
+
+Se configuraron los siguiente registros DNS
+externos en Cloudflare.
+\begin{enumerate}
+  \item A (Web Server - octogatos.tech - 52.87.39.6).
+
+  \item A (Email Server - mail.octogatos.tech - 54.162.84.2).
+
+  \item A (Email Server - postfixadmin.mail.octogatos.tech
+                        - 54.162.84.2).
+
+  \item AAAA (Web Server - octogatos.tech
+                         - 2600:1f18:22c6:b16:1e05:b4d5:f19:61d).
+
+  \item AAAA (Email Server - mail.octogatos.tech
+                           - 2600:1f18:22c6:b00:9ca8:5c2a:c3c:d17f).
+
+  \item CNAME (Web Server - www.octogatos.tech).
+
+  \item MX (Web Server - 10 mail.octogatos.tech).
+
+  \item TXT (Email Server - SPF).
+
+  \item TXT (Email Server - DKIM).
+
+  \item TXT (Email Server - DMARC).
+\end{enumerate}
+En la Figura \ref{fig:dnsExterno} se muestra la
+evidencia respecto a esta configuraci\'on, misma
+que puede ser verificada con el comando \ttt{dig},
+salvo por aquellos registros para los que el proxy
+de Cloudflare est\'a activo.
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{DNS/dnsExterno}
+  \caption{Configuraci\'on de los registros DNS externos.}
+  \label{fig:dnsExterno}
+\end{figure}
+
+Adicionalmente, se configur\'o el registro PTR para
+el servidor de correo, mediante la solicitud a Amazon
+para abrir el puerto 25.
+
+Usando Route 53, se configuraron los siguientes
+registros.
+\begin{enumerate}
+  \item A (Web Server - octogatos.tech - 172.31.89.224).
+
+  \item A (Email Server - mail.octogatos.tech - 172.31.32.123).
+
+  \item A (App Server - 172.31.4.254).
+
+  \item A (Data Server - 172.31.4.254).
+
+  \item CNAME (Web Server - www.octogatos.tech).
+
+  \item MX (Web Server - 10 172.31.32.123).
+\end{enumerate}
+La evidencia de esta configuraci\'on se muestra en
+la Figura \ref{fig:createdRecord}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\textwidth]{DNS/createdRecord}
+  \caption{Configuraci\'on de los registros DNS internos.}
+  \label{fig:createdRecord}
+\end{figure}
+
 \section{Configuraci\'on NAT}
 
 Como se mencion\'o con anterioridad, con la finalidad
