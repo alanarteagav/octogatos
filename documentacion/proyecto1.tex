@@ -92,7 +92,17 @@
 
 \begin{document}
 
+\section{Diagrama}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{images/diagrama}
+  \caption{Diagrama.}
+  \label{fig:diagrama}
+\end{figure}
+
 \section{Registros DNS}
+\label{sec:dns}
 
 Para realizar esta configuraci\'on, fue necesario
 actualizar los name servers de nuestro dominio,
@@ -142,7 +152,7 @@ salvo por aquellos registros para los que el proxy
 de Cloudflare est\'a activo.
 \begin{figure}[H]
   \centering
-  \includegraphics[width=\textwidth]{DNS/dnsExterno}
+  \includegraphics[width=0.85\textwidth]{DNS/dnsExterno}
   \caption{Configuraci\'on de los registros DNS externos.}
   \label{fig:dnsExterno}
 \end{figure}
@@ -150,6 +160,45 @@ de Cloudflare est\'a activo.
 Adicionalmente, se configur\'o el registro PTR para
 el servidor de correo, mediante la solicitud a Amazon
 para abrir el puerto 25.
+
+Se utiliz\'o Route 53 para configurar algunos registros
+internos.   Para este fin, primero creamos una
+``private hosted zone'', siguiendo las instrucciones
+que aparecen en
+\href{https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/hosted-zone-private-creating.html}{esta liga} (recurso
+de AWS).   Para crear esta zona, simplemente elegimos
+la opci\'on ``Create hosted zone'', elegimos el
+nombre de dominio ``octogatos.tech'', y la VPC en la
+que estamos trabajando para asociar a nuestra nueva
+zona. Una vez creada, es posible iniciar la configuraci\'on
+de registros, que es semejante a la que se har\'ia
+usualmente con un DNS externo, pero se utilizan las
+direcciones IP privadas.   Un ejemplo de configuraci\'on
+se puede ver en la Figura \ref{fig:defineRecord}, donde
+el tipo de registro que se eligi\'o fue ``Simple'' (se
+asocia el nombre de dominio con una \'unica direcci\'on
+IP).
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.44\textwidth]{DNS/defineRecord}
+  \caption{Configuraci\'on del registro DNS interno para el
+           app server usando Route 53.}
+  \label{fig:defineRecord}
+\end{figure}
+
+Es posible configurar y crear m\'ultiples registros
+a la vez, como se muestra en la Figura
+\ref{fig:createRecord}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\textwidth]{DNS/createRecord}
+  \caption{Creaci\'on de m\'ultiples registros DNS internos
+           en Route 53.}
+  \label{fig:createRecord}
+\end{figure}
+
 
 Usando Route 53, se configuraron los siguientes
 registros.
@@ -160,7 +209,7 @@ registros.
 
   \item A (App Server - 172.31.4.254).
 
-  \item A (Data Server - 172.31.4.254).
+  \item A (Data Server - 172.31.14.164).
 
   \item CNAME (Web Server - www.octogatos.tech).
 
@@ -171,9 +220,75 @@ la Figura \ref{fig:createdRecord}
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.8\textwidth]{DNS/createdRecord}
-  \caption{Configuraci\'on de los registros DNS internos.}
+  \caption{Registros DNS internos configurados en Route 53.}
   \label{fig:createdRecord}
 \end{figure}
+
+\section{Cloudflare}
+
+Se utilaron tres servicios de
+\href{https://www.cloudflare.com/}{Cloudflare}, a saber,
+su DNS, como una capa de seguridad adicional entre el
+usuario y el proxy de Cloudflare, y como Red de
+Distribuci\'on de Contenidos (CDN).
+
+Respecto a su uso como DNS, ya se habl\'o de la
+configuraci\'on en la Secci\'on \ref{sec:dns}.   Para
+su uso como CDN, configuramos dos reglas de CDN, una
+para servir hojas de estilo (CSS) y otra para servir
+im\'agenes.   Para la configuraci\'on simplemente
+elegimos la regla de cach\'e y el recurso que queremos
+que sea servido por Cloudflare.   En nuestro caso,
+elegimos Edge Cache TTL, que nos permite indicar
+un tiempo que, al transcurrir, Cloudflare solicitar\'a
+una actualizaci\'on del recurso.   La configuraci\'on
+de ambas reglas puede verse en la Figura
+\ref{fig:pageRules}.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\textwidth]{cloudflare/pageRules}
+  \caption{Configuraci\'on de page rules en Cloudflare.}
+  \label{fig:pageRules}
+\end{figure}
+
+Para ver que estas reglas realmente est\'an funcionando,
+podemos elegir la opci\'on ``Inspeccionar Elemento'' en
+nuestra p\'agina \href{https://octogatos.tech}{octogatos.tech},
+y notar que el valor \ttt{cf-cache-status} asociado a
+a la imagen jazzCats.jpg es \ttt{HIT}, lo que significa que
+fue encontrado al buscarse en el cache ofrecido por Cloudflare.
+Puede notarse adem\'as que el valor de \ttt{server} es
+cloudflare (Figura \ref{fig:pageRulesHit}).
+
+% ALERT
+% Actualizar el SS por uno que no tenga un 404
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{cloudflare/pageRulesHit}
+  \caption{Configuraci\'on de page rules en Cloudflare.}
+  \label{fig:pageRulesHit}
+\end{figure}
+
+Por otro lado, el modo de encriptaci\'on que se
+configur\'o en Cloudflare es Completo (estricto).
+Como ya se mencion\'o, Cloudflare ofrece la
+encriptaci\'on entre el usuario final y sus
+servidores (que estamos usando como proxies),
+y nuestros certificados de Let's Encrypt proporcionan
+la seguridad entre los servidores de Cloudflare
+y nuestro servidor en AWS.   El estado actual de
+la configuraci\'on de SSL/TLS puede verse en la
+Figura \ref{fig:cfEncryption}.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{cloudflare/cfEncryption}
+  \caption{Configuraci\'on de SSL/TLS en Cloudflare.}
+  \label{fig:cfEncryption}
+\end{figure}
+
 
 \section{Configuraci\'on NAT}
 
