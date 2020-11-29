@@ -89,7 +89,6 @@
 \texttt{#1}%
 }
 
-
 \begin{document}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -777,6 +776,507 @@ $ sudo apt-get update
 $ sudo apt-get install postfix -y
 \end{lstlisting}
 
+En este momento, es posible revisar la configuraci\'on
+de postfix enviando un mensaje, y revisando los mensajes
+recibidos, desde la l\'inea de comando.   Para este fin,
+es posible utilizar \ttt{mailutils} como mail user
+agent, que se instala con el siguiente comando
+\begin{lstlisting}
+$ sudo apt-get install mailutils
+\end{lstlisting}
+
+Para enviar un mensaje, basta con usar el comando
+\begin{lstlisting}
+$ mail username@domain.com
+\end{lstlisting}
+al terminar de llenar los campos correspondientes
+y escribir el cuerpo del mensaje, \ttt{Ctrl+D}
+enviar\'a el mensaje.   Para revisar los mensajes
+recibidos basta con ejecutar el comando
+\begin{lstlisting}
+$ mail
+\end{lstlisting}
+
+Resulta conveniente realizar algunos cambios en
+el archivo de configuraci\'on de Postfix, en
+particular, establecer el nombre del host.   Esto
+se puede hacer con el comando
+\begin{lstlisting}
+$ sudo vi /etc/postfix/main.cf
+\end{lstlisting}
+cambiando la l\'inea de \ttt{myhostname} por
+\begin{lstlisting}
+myhostname = mail.octogatos.tech
+\end{lstlisting}
+y finalmente reiniciando Postfix con el comando
+\begin{lstlisting}
+$ sudo systemctl restart postfix
+\end{lstlisting}
+
+Resulta tambi\'en conveniente configurar un alias
+para \ttt{root}, ya que por omisi\'on, existe el
+alias \ttt{postmaster: root}, que permite que los
+correos dirigidos a \ttt{postmaster@octogatos.tech}
+se entreguen a \ttt{root@octogatos.tech}. Si en
+lugar de eso, nos gustar\'ia que se entregaran a una
+direcci\'on distinta, basta con modificar el archivo
+\ttt{aliases} con el comando
+\begin{lstlisting}
+sudo vi /etc/aliases
+\end{lstlisting}
+y agregando la l\'inea
+\begin{lstlisting}
+root:   <username>
+\end{lstlisting}
+finalmente, se puede reconstruir la base de datos
+de alias con el comando
+\begin{lstlisting}
+sudo newaliases
+\end{lstlisting}
+
+En este momento, nuestro servidor de correo s\'olo
+puede enviar y recibir correos por la l\'inea de
+comando.   Instalaremos el servidor IMAP y POP3
+\href{https://www.dovecot.org/}{Dovecot}.   Como
+prerrequisito, se necesita contar con un certificado
+de seguridad, en nuestro caso estamos utilizando uno
+emitido por \href{https://letsencrypt.org/}{Let's
+Encrypt}.
+
+A continuaci\'on, es necesario activar el servicio
+de env\'io de mensajes en Postfix, para que nuestro
+cliente de correo pueda enviar mensajes de correo
+a trav\'es de nuestro servidor. Debemos ejecutar
+el comando
+\begin{lstlisting}
+$ sudo vi /etc/postfix/master.cf
+\end{lstlisting}
+y en la secci\'on \ttt{submission}, agregar las
+siguientes l\'ineas:
+\begin{lstlisting}
+submission     inet     n    -    y    -    -    smtpd
+ -o syslog_name=postfix/submission
+ -o smtpd_tls_security_level=encrypt
+ -o smtpd_tls_wrappermode=no
+ -o smtpd_sasl_auth_enable=yes
+ -o smtpd_relay_restrictions=permit_sasl_authenticated,reject
+ -o smtpd_recipient_restrictions=permit_mynetworks,permit_sasl_authenticated,reject
+ -o smtpd_sasl_type=dovecot
+ -o smtpd_sasl_path=private/auth
+\end{lstlisting}
+si adicionalmente se desea usar Microsoft Outlook,
+que utiliza el puerto 465, es necesario agregar
+tambi\'en las siguientes l\'ineas.
+\begin{lstlisting}
+smtps     inet  n       -       y       -       -       smtpd
+  -o syslog_name=postfix/smtps
+  -o smtpd_tls_wrappermode=yes
+  -o smtpd_sasl_auth_enable=yes
+  -o smtpd_relay_restrictions=permit_sasl_authenticated,reject
+  -o smtpd_recipient_restrictions=permit_mynetworks,permit_sasl_authenticated,reject
+  -o smtpd_sasl_type=dovecot
+  -o smtpd_sasl_path=private/auth
+\end{lstlisting}
+Un ejemplo de esta configuraci\'on puede verse en
+la Figura \ref{fig:email-postfixSub}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.75\textwidth]{email/postfixSub}
+  \caption{Configuraci\'on del servicio de env\'io de Postfix.}
+  \label{fig:email-postfixSub}
+\end{figure}
+
+A continuaci\'on, tenemos que especificar a Postfix
+el lugar donde se encuentra nuestro certificado de
+seguridad y llave privada.   Para abrir el archivo
+de configuraci\'on, ejecutamos el comando
+\begin{lstlisting}
+sudo vi /etc/postfix/main.cf
+\end{lstlisting}
+y modificamos las l\'ineas relativas a la ubicaci\'on
+del certificado y llave TLS como en la Figura
+\ref{fig:email-tlsLocation}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.75\textwidth]{email/tlsLocation}
+  \caption{Configuraci\'on del certificado TLS para Postfix.}
+  \label{fig:email-tlsLocation}
+\end{figure}
+
+Ahora es posible instalar
+\href{https://www.dovecot.org/}{Dovecot} con el
+siguiente comando
+\begin{lstlisting}
+$ sudo apt install dovecot-lmtpd
+\end{lstlisting}
+y ajustar la configuraci\'on principal con
+el comando
+\begin{lstlisting}
+$ sudo vi /etc/dovecot/dovecot.conf
+\end{lstlisting}
+donde tenemos que agregar \ttt{lmtp} y \ttt{pop3}
+a los protocolos aceptados.
+
+Adem\'as, se debe modificar el siguiente archivo
+\begin{lstlisting}
+sudo vi /etc/dovecot/conf.d/10-master.conf
+\end{lstlisting}
+para ajustar la definici\'on del servicio \ttt{lmtp},
+para que quede como en la Figura \ref{fig:email-lmtp}.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.75\textwidth]{email/lmtp}
+  \caption{Configuraci\'on del servicio lmtp de Dovecot.}
+  \label{fig:email-lmtp}
+\end{figure}
+
+Para terminar, es necesario indicar a Postfix que
+entregue los mensajes al almacenamiento local,
+mediante el servidor LMTP de Dovecot.   Esto se
+hace en la configuraci\'on principal de Postfix
+\begin{lstlisting}
+sudo vi /etc/postfix/main.cf
+\end{lstlisting}
+agregando las siguientes dos l\'ineas al final
+del archivo
+\begin{lstlisting}
+mailbox_transport = lmtp:unix:private/dovecot-lmtp
+smtputf8_enable = no
+\end{lstlisting}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.75\textwidth]{email/lmtp2}
+  \caption{Uso del servicio lmtp de Dovecot en Postfix.}
+  \label{fig:email-lmtp2}
+\end{figure}
+
+Finalmente, reiniciamos Postfix y Dovecot con
+el comando
+\begin{lstlisting}
+sudo systemctl restart postfix dovecot
+\end{lstlisting}
+
+En este momento, es posible configurar un cliente
+de correo, como Thunderbird.   Una posible
+configuraci\'on del servidor de entrada se
+muestra en la Figura \ref{fig:email-tbirdout}
+y una posible configuraci\'on del servidor
+de salida en la Figura \ref{fig:email-tbirdout}.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.75\textwidth]{email/tbirdin}
+  \caption{Configuraci\'on del servidor IMAPS para
+           usar Thunderbird con nuestro servidor de correo.}
+  \label{fig:email-tbirdin}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.75\textwidth]{email/tbirdout}
+  \caption{Configuraci\'on del servidor SMTPS para
+           usar Thunderbird con nuestro servidor de correo.}
+  \label{fig:email-tbirdout}
+\end{figure}
+
+En la Figura \ref{fig:email-tbird} se muestra evidencia
+del funcionamiento de la configuraci\'on.   Se tiene un
+correo en la bandeja entrada de \ttt{cesar@octogatos.tech}
+enviado por \ttt{cesar@octogatos.tech}.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\textwidth]{email/tbird}
+  \caption{Bandeja de entrada de \ttt{cesar@octogatos.tech}.}
+  \label{fig:email-tbird}
+\end{figure}
+
+Aunque en este punto el servidor de correo ya funciona,
+s\'olo funciona con cuentas locales de Linux, es decir,
+con cuentas creadas directamente en el servidor.   El
+siguiente paso es crear buzones virtuales para poder
+asignar cuentas a usuarios que no necesariamente tienen
+una cuenta en el servidor.    El primer paso ser\'a
+crear una pila LAMP (Linux, Apache, MariaDB, PHP),
+para lo cu\'al referimos al lector al siguiente
+\href{https://www.linuxbabe.com/ubuntu/install-lamp-stack-ubuntu-20-04-server-desktop}{tutorial}.   La finalidad
+de esta pila de aplicaciones ser\'a tener un ambiente
+en el que podamos crear los buzones virtuales; como
+su nombre lo indica, el sistema operativo es Linux,
+el servidor web es Apache, la base de datos es
+MariaDB, y el lenguaje responsable de generar p\'aginas
+web din\'amicas en el servidor es PHP.
+
+Para la creaci\'on y manejo de buzones virtuales
+utilizaremos
+\href{http://postfixadmin.sourceforge.net/}{PostfixAdmin},
+una interfaz web para configurar y administrar un servidor
+de correo en Postfix para m\'ultiples usuarios.
+
+En nuestro caso utilizamos MariaDB, pero en caso de
+que se est\'e utilizando MySQL, se puede instalar
+el paquete \ttt{dbconfig-no-thanks} para evitar que
+la instalaci\'on de PostfixAdmin intente configurar
+la base de datos.   Esto se puede hacer con el comando
+\begin{lstlisting}
+$ sudo apt install dbconfig-no-thanks
+\end{lstlisting}
+tras lo cu\'al es posible instalar PostfixAdmin
+\begin{lstlisting}
+$ sudo apt install postfixadmin
+\end{lstlisting}
+remover el paquete antes referido
+\begin{lstlisting}
+$ sudo apt remove dbconfig-no-thanks
+\end{lstlisting}
+y finalmente, configurar la base de datos
+\begin{lstlisting}
+$ sudo dpkg-reconfigure postfixadmin
+\end{lstlisting}
+
+Las opciones que deben elegirse son
+$\ttt{mysql} \to \ttt{Unix socket} \to
+ \ttt{default} \to \ttt{postfixadmin} \to
+ \ttt{postfixadmin@localhost}$, tras lo
+cu\'al se elige un password y nombre de
+usuario para el administrador.   Tras
+esta acci\'on, es necesario modificar
+dos archivos de configuraci\'on de
+PostfixAdmin.   Primero
+\begin{lstlisting}
+$ sudo vi /etc/dbconfig-common/postfixadmin.conf
+\end{lstlisting}
+donde se debe cambiar la l\'inea
+\begin{lstlisting}
+dbc_dbtype='mysql'
+\end{lstlisting}
+por
+\begin{lstlisting}
+dbc_dbtype='mysqli'
+\end{lstlisting}
+
+Adem\'as
+\begin{lstlisting}
+$ sudo vi /etc/postfixadmin/dbconfig.inc.php
+\end{lstlisting}
+donde la l\'inea
+\begin{lstlisting}
+$dbtype='mysql';
+\end{lstlisting}
+se cambia por \begin{lstlisting}
+$dbtype='mysqli';
+\end{lstlisting}
+
+Adem\'as, es necesario crear un directorio
+donde estar\'an los templates de PostfixAdmin,
+y brindarle los permisos necesarios a
+\ttt{www-data} para leer, escribir y ejecutar
+en este directorio.
+\begin{lstlisting}
+$ sudo mkdir /usr/share/postfixadmin/templates_c
+
+$ sudo setfacl -R -m u:www-data:rwx /usr/share/postfixadmin/templates_c/
+\end{lstlisting}
+
+Ahora podemos crear un virtual host para
+PostfixAdmin.  Es necesario crear el archivo
+para la configuraci\'on correspondiente con
+el comando
+\begin{lstlisting}
+sudo vi /etc/apache2/sites-available/postfixadmin.conf
+\end{lstlisting}
+el contenido de dicho archivo debe verse como
+en la Figura \ref{fig:email-vhost}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\textwidth]{email/vhost}
+  \caption{Configuraci\'on del virtual host para PostfixAdmin.}
+  \label{fig:email-vhost}
+\end{figure}
+
+Para activar la configuraci\'on, es necesario
+ejecutar los comandos
+\begin{lstlisting}
+$ sudo a2ensite postfixadmin.conf
+
+$ sudo systemctl reload apache2
+\end{lstlisting}
+
+Ahora es posible ejecutar el install-wizard de
+PostfixAdmin desde \href{http://postfixadmin.octogatos.tech/setup.php}{http://postfixadmin.octogatos.tech/setup.php}
+(actualmente el v\'inculo est\'a desactivado, pues
+ya concluy\'o la instalaci\'on).
+
+El siguiente paso es instalar alg\'unos m\'odulos
+de PHP requeridos o recomendados por PostfixAdmin.
+\begin{lstlisting}
+$ sudo apt install php7.4-fpm php7.4-imap php7.4-mbstring php7.4-mysql php7.4-json php7.4-curl php7.4-zip php7.4-xml php7.4-bz2 php7.4-intl php7.4-gmp
+\end{lstlisting}
+
+La encriptaci\'on que Dovecot usa por omisi\'on
+es \ttt{MD5-CRYPT}, que no es muy segura.  La cambiaremos
+a una m\'as segura, \ttt{ARGON2I}.   Para esto,
+abrimos el archivo de configuraci\'on local de
+PostfixAdmin
+\begin{lstlisting}
+$ sudo vi /usr/share/postfixadmin/config.local.php
+\end{lstlisting}
+y agregamos las l\'ineas que se muestran en la
+Figura \ref{fig:email-argon}.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\textwidth]{email/argon}
+  \caption{Configuraci\'on del esquema de encriptaci\'on.}
+  \label{fig:email-argon}
+\end{figure}
+Finalmente, terminamos la instalaci\'on en nuestro
+navegador en la direcci\'on
+\ttt{postfixadmin.octogatos.teh/setup.php} (ahora
+deshabilitada).   Tras crear el hash de la contrase\~na,
+es necesario modificar el archivo \\
+\ttt{/usr/share/postfixadmin/config.local.php}, agregando
+la l\'inea final con nuestro hash.   El resultado final
+puede verse en la Figura \ref{fig:email-hash}.
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\textwidth]{email/hash}
+  \caption{Agregando el hash de la contrase\~na para el
+           administrador en PostfixAdmin.}
+  \label{fig:email-hash}
+\end{figure}
+
+Ahora es posible ingresar a la aplicaci\'on web
+mediante
+\href{https://postfixadmin.mail.octogatos.tech/login.php}{esta direcci\'on}, como se observa en la Figura
+\ref{fig:email-postfixAdmin}.
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\textwidth]{email/postfixAdmin}
+  \caption{Aplicaci\'on PostfixAdmin corriendo en nuestro
+           servidor.}
+  \label{fig:email-postfixAdmin}
+\end{figure}
+
+El siguiente paso es configurar Postfix y Dovecot para
+usar MariaDB, los pasos son sencillos, pero t\'ecnicos y
+tediosos, por lo que simplemente referimos al lector
+a la \href{https://www.linuxbabe.com/mail-server/postfixadmin-create-virtual-mailboxes-ubuntu-20-04}{siguiente liga}.
+Tras realizar esta configuraci\'on, es posible cerar
+buzones virtuales para nuevos usuarios de correo en
+la p\'agina de PostfixAdmin.   M\'as importante, es
+posible configurar un cliente de email web para tener
+acceso a nuestro servidor de correo.   Utilizamos
+\href{https://roundcube.net/}{Roundcube} y seguimos
+\href{https://www.linuxbabe.com/ubuntu/install-roundcube-webmail-ubuntu-20-04-apache-nginx}{este tutorial} para
+configurarlo.  El resultado final puede observarse
+en \href{https://mail.octogatos.tech}{mail.octogatos.tech},
+y la Figura \ref{fig:email-roundcube} muestra la aplicac\'on
+en funcionamiento.
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\textwidth]{email/roundcube}
+  \caption{Aplicaci\'on Roundcube corriendo en nuestro
+           servidor.}
+  \label{fig:email-roundcube}
+\end{figure}
+
+
+Finalmente, configuramos los registros SPF, DKIM y DMARC.
+La correcta configuraci\'on de estos registros redundar\'a
+en que nuestro servidor no pueda ser utilizado por terceros
+para enviar correos, es decir, no est\'a en open relay.
+
+La configuraci\'on del registro SPF es muy sencilla, basta
+con seguir el formato de la Figura \ref{fig:email-spf}.
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\textwidth]{email/spf}
+  \caption{Configuraci\'on de registro SPF.}
+  \label{fig:email-spf}
+\end{figure}
+
+La configuraci\'on del registro DKIM es un poco m\'as
+elaborada.   Utilizamos \href{http://opendkim.org/}{OpenDKIM}
+para configurarlo en nuestro servidor, y crear la llave
+p\'ublica cuyo hash se integr\'o al registro
+correspondiente.   Nuevamente, la configuraci\'on
+es sencilla, pero larga y t\'ecnica, por lo que
+simplemente referimos al lector a
+\href{https://www.linuxbabe.com/mail-server/setting-up-dkim-and-spf}{este tutorial}. Una vez configurada esta
+aplicaci\'on, es necesario crear un par de
+llave p\'ublica y privada, para lo cu\'al es
+necesario crear primero una carpeta para nuestro
+dominio
+\begin{lstlisting}
+sudo mkdir /etc/opendkim/keys/octogatos.tech
+\end{lstlisting}
+generar las llaves
+\begin{lstlisting}
+sudo opendkim-genkey -b 2048 -d octogatos.tech -D /etc/opendkim/keys/octogatos.tech -s default -v
+\end{lstlisting}
+hacer a OpenDKIM el due\~no de la llave privada
+\begin{lstlisting}
+sudo chown opendkim:opendkim /etc/opendkim/keys/octogatos.tech/default.private
+\end{lstlisting}
+y finalmente publicar la llave p\'ublica en el registro
+DKIM correspondiente.   Es posible acceder al archivo
+donde se encuentra el hash de la llave p\'ublica con
+el comando
+\begin{lstlisting}
+sudo cat /etc/opendkim/keys/octogatos.tech/default.txt
+\end{lstlisting}
+como se muestra en la Figura \ref{fig:email-hashdkim}.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\textwidth]{email/hashdkim}
+  \caption{Obtenci\'on del hash de la llave p\'ublica para
+           el registro DKIM.}
+  \label{fig:email-hashdkim}
+\end{figure}
+
+Con esta informaci\'on, es ahora posible configurar el
+registro DKIM como se muestra en la Figura
+\ref{fig:email-dkim}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\textwidth]{email/dkim}
+  \caption{Configuraci\'on del registro DKIM.}
+  \label{fig:email-dkim}
+\end{figure}
+
+Una vez con ambos registros configurados, la configuraci\'on
+del registro DMARC se reduce a crear el registro como se
+muestra en la Figura \ref{fig:email-dmarc}.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\textwidth]{email/dmarc}
+  \caption{Configuraci\'on del registro DMARC.}
+  \label{fig:email-dmarc}
+\end{figure}
+
+Hay varias formas de verificar que estas configuraciones
+fueron correctas, una sencilla es enviar un corro desde
+nuestro servidor a cualquier direcci\'on de correo
+manejada por Google, y ver los detalles en ``Mostrar
+mensaje original'', donde podemos ver las entradas
+mostradas en la Figura \ref{fig:email-spfdkimdmarc}.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\textwidth]{email/spfdkimdmarc}
+  \caption{Verificaci\'on de la configuraci\'on de los
+           registros SPF, DKIM y DMARC.}
+  \label{fig:email-spfdkimdmarc}
+\end{figure}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
