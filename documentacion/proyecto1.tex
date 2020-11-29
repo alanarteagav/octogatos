@@ -669,5 +669,153 @@ revisarse en la Figura \ref{fig:NAT-result}.
   \label{fig:NAT-result}
 \end{figure}
 
+\newpage
+
+\section {Configuración del Data Server}
+
+Para la configuración inicial del data server, lo primordial es tener
+instalado y configurado el manejador de base de datos dentro de nuestro 
+servidor. Para ello optamos por Postgres (12.5), el cual instalamos 
+en nuestro servidos mediante los comandos:
+
+\begin{lstlisting}
+$ sudo apt install postgresql postgresql-contrib
+\end{lstlisting}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{DATASERVER/exhibitA}
+  \caption{Instalación de postgres en el data server.}
+  \label{fig:DATASERVER-A}
+\end{figure}
+
+Como Postgres utiliza ``roles'' para manejar la autenticación y 
+autorización de creación de base de datos, es necesario acceder 
+al rol por omisión que crea Postgres para poder trabajar con su 
+manejador de base de datos. Accedemos al usuario por medio de:
+
+\begin{lstlisting}
+$ sudo -i -u postgres
+\end{lstlisting}
+
+Y ahora podemos acceder sin problema alguno a Postgres:
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{DATASERVER/exhibitB}
+  \caption{Manejador de Base de Datos Postgresql.}
+  \label{fig:DATASERVER-B}
+\end{figure}
+
+Y creamos nuestra base de datos \ttt{octogatos} que va a ser 
+utilizada en este proyecto.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{DATASERVER/exhibitC}
+  \caption{Creación de la base de datos del proyecto.}
+  \label{fig:DATASERVER-C}
+\end{figure}
+
+Como sólo se podrá conectar la App Server a este servidor, 
+entonces es necesario indicar en la configuración que 
+confíamos solo vamos a confiar en las conexiones locales 
+(del mismo server a sí mismo) y en las conexiones que vengan
+del App Server.
+
+Para la conexión local, tenemos que modificar el archivo 
+\ttt{pg\_hba.conf}, sustituyendo la línea:
+
+\begin{lstlisting}
+local   all             postgres                                peer
+\end{lstlisting}
+
+Por la línea:
+\begin{lstlisting}
+local   all             postgres                                trust
+\end{lstlisting}
+
+Reiniciamos nuestro servidor y listo, ya se pueden ejecutar 
+\textit{scripts} de sql; por ejemplo creamos nuestra tabla 
+``user'':
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{DATASERVER/exhibitE}
+  \caption{Creación de la tabla usuarios.}
+  \label{fig:DATASERVER-E}
+\end{figure}
+
+Para la conexión remota, primero tenemos que verificar a qué 
+dirección IP se encuentra ligada el puerto 5432 (el puerto 
+que usa Postgres).
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{DATASERVER/exhibitF}
+  \caption{La dirección del puerto 5432.}
+  \label{fig:DATASERVER-E}
+\end{figure}
+
+Si nosotros tratamos de conectarnos a este puerto, entonces no 
+vamos a tener éxito:
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{DATASERVER/exhibitG}
+  \caption{Primero intento de conexión al puerto 5432.}
+  \label{fig:DATASERVER-G}
+\end{figure}
+
+Para poder resolver esto, necesitamos configurar nuestros 
+archivos \ttt{postgresql.conf} y \ttt{pg\_hba.conf}. 
+En el primer archivo cambiamos el valor de 
+\ttt{listen\_addresses} por:
+
+\begin{lstlisting}
+listen_addresses = '*'
+\end{lstlisting}
+
+Y también agregamos la dirección IP privada de la App
+Server  al segundo archivo:
+\begin{lstlisting}
+host    all             all              172.31.4.254/0                       trust
+\end{lstlisting}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{DATASERVER/exhibitI}
+  \label{fig:DATASERVER-I}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{DATASERVER/exhibitJ}
+  \label{fig:DATASERVER-J}
+\end{figure}
+
+Sin embargo, si lo dejamos como lo tenemos ahorita, nuestro 
+servidor va a aceptar las conexiones de cualquier servidor,
+por lo tanto tenemos que agregar este tipo de restricción 
+al \textit{security groups} de nuestro servidor.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{DATASERVER/exhibitK}
+  \label{fig:DATASERVER-K}
+\end{figure}
+
+Y listo, si accedemos a nuestro App Server y tratamos de 
+conectar a postgres, entonces vamos a tener éxito. Mientras
+que si nos conectamos desde cualquier otro servidor o 
+dispositivo dentro de la red, entonces no se va a aceptar la 
+conexión.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{DATASERVER/exhibitL}
+  \caption{Intento exitoso para conectarse al Data Server desde la App Server.}
+  \label{fig:DATASERVER-L}
+\end{figure}
 
 \end{document}
