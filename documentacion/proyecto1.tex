@@ -92,14 +92,92 @@
 
 \begin{document}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%               %%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \section{Diagrama}
+
+El diagrama de la configuraci\'on de nuestros
+servidores se muestra en la Figura \ref{fig:diagrama}.
+La componente de la derecha en el diagrama corresponde
+a todos los servicios que son cubiertos por AWS.
+Todos los servidores son instancias EC2; aparece en
+primer lugar su nombre de dominio privado, administrado
+por Route 53, despu\'es su direcci\'on IP interna (con
+m\'ascara de subred 172.31.0.0), y para el servidor web
+(octogatos.tech), el servidor de correo
+(mail.octogatos.tech) y el NAT gateway, su direcci\'on
+IP el\'astica en tercer lugar.   Como puede verse en
+el diagrama, hay dos subredes p\'ublicas (una que
+contiene al servidor web y al NAT gateway, y otra que
+\'unicamente contiene al servidor de correo), y una
+privada (que contiene a los servidores de aplicaci\'on
+y de datos).   La subred p\'ublica tiene salida a
+internet a trav\'es del NAT gateway, y las tres
+subredes, junto con el NAT gateway, se enrutan al
+internet gateway a trav\'es de la tabla de ruteo de
+la VPC.
+
+Fuera de los servicios de AWS, se utiliz\'o
+\href{https://get.tech}{.tech domains} para registrar
+el dominio \href{https://octogatos.tech}{octogatos.tech}.
+Tambi\'en se utilizaron los servicios de DNS y CDN de
+\href{https://cloudflare.com}{Cloudflare}, as\'i como
+su sistema de seguridad entre el cliente y sus
+servidores.
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=\textwidth]{images/diagrama}
-  \caption{Diagrama.}
+  \caption{Diagrama de configuraci\'on.}
   \label{fig:diagrama}
 \end{figure}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%               %%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Direcciones IPv6}
+
+Las instancias correspondientes al servidor web y al
+servidor de correo electr\'onico cuentan con direcciones
+IPv6.   Para asignarle una direcci\'on IPv6 a nuestras
+instancias se llevaron a cabo los siguientes pasos.
+\begin{enumerate}
+  \item Asociar un bloque CIDR IPv6 a nuestra VPC y
+    subredes.
+
+  \item Actualizar las tablas de enrutamiento.
+
+  \item Actualizar los grupos de seguridad.
+
+  \item Asignar direcciones IPv6 a las instancias.
+\end{enumerate}
+
+No ahondaremos en las instrucciones precisas para estos
+pasos, pues pueden consultarse en el documento de AWS
+que se encuentra en \href{https://docs.aws.amazon.com/vpc/latest/userguide/vpc-migrate-ipv6.html}{esta liga}.  Sin embargo,
+creemos valioso mencionar que, aunque en el Paso 3 diga
+que las reglas de ACL se configuran autom\'aticamente,
+nosotros tuvimos que hacerlo a mano.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%               %%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Registros DNS}
 \label{sec:dns}
@@ -224,6 +302,14 @@ la Figura \ref{fig:createdRecord}
   \label{fig:createdRecord}
 \end{figure}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%               %%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \section{Cloudflare}
 
 Se utilaron tres servicios de
@@ -289,6 +375,144 @@ Figura \ref{fig:cfEncryption}.
   \label{fig:cfEncryption}
 \end{figure}
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%               %%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Web Server}
+
+Para nuestro Web Server utilizamos la instancia EC2 que
+fue creada en la Pr\'actica 2, por lo que no ahondaremos
+en detalles respecto a su creaci\'on.   Es importante
+recalcar que tambi\'en reutilizamos el certificado
+expedido por \href{https://letsencrypt.org/}{Let's Encrypt},
+y configurado con \href{https://certbot.eff.org/}{Certbot},
+as\'i como la direcci\'on IP el\'astica de la Pr\'actica 2,
+por lo que la configuraci\'on de la instancia en AWS se ve
+como en la Figura \ref{fig:web-instancia}.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{web/instancia}
+  \caption{Configuraci\'on de la instancia del Web Server
+           en AWS.}
+  \label{fig:web-instancia}
+\end{figure}
+
+Como se puede ver en la figura, esta instancia se
+encuentra en una subred, identificada con el nombre
+``P\'ublica Web'', cuya configuraci\'on se muestra
+en la figura \ref{fig:web-subred}.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{web/subred}
+  \caption{Configuraci\'on de la primera subred p\'ublica.}
+  \label{fig:web-subred}
+\end{figure}
+
+Adem\'as, esta instancia cuenta con una direcci\'on IPv6,
+misma que puede verse en la configuraci\'on de red de la
+instancia, misma que puede apreciarse en la Figura
+\ref{fig:web-ipv6}.   N\'otese que la direcci\'on IPv6
+de esta instancia efectivamente coincide con la que se
+asign\'o a la subred correspondiente.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{web/ipv6}
+  \caption{Configuraci\'on de red del servidor web.}
+  \label{fig:web-ipv6}
+\end{figure}
+
+Nuestro servidor web act\'ua principalmente como
+forward y reverse proxy.   Esta opci\'on se habilita
+como parte de la configuraci\'on del servidor Apache.
+Hay varios recursos en internet sobre c\'omo realizar
+esta configuraci\'on paso a paso, por ejemplo, es
+posible seguir las instrucciones dadas por
+\href{https://www.digitalocean.com/community/tutorials/how-to-use-apache-http-server-as-reverse-proxy-using-mod_proxy-extension}{este
+tutorial} de Digital Ocean.   Para llevar a cabo,
+la configuraci\'on, primero es necesario activar
+algunos m\'odulos de apache, lo que puede hacerse
+con los comandos
+\begin{lstlisting}
+$ sudo a2enmod proxy
+$ sudo a2enmod proxy_http
+$ sudo a2enmod rewrite
+$ sudo a2enmos proxy_connect
+$ sudo a2enmod proxy_html
+\end{lstlisting}
+
+Existe la posibilidad de que el m\'odulo no est\'e
+instalado, en cuyo caso puede instalarse con el
+comando
+\begin{lstlisting}
+sudo apt install -y libapache2-mod-proxy-html libxml2-dev
+\end{lstlisting}
+
+Una vez habilitados estos m\'odulos, procedemos
+a actualizar la configuraci\'on del servidor
+Apache, con el comando
+\begin{lstlisting}
+sudo vi /etc/apache2/sites-available/redesfc.conf
+\end{lstlisting}
+
+Tambi\'en es necesario actualizar la configuraci\'on
+creada por Certbot cuando obtuvimos el certificado
+de Let's Encrypt, para el virtual host de HTTPS en
+el puerto 443, lo que puede hacerse con el siguiente
+comando
+\begin{lstlisting}
+sudo vi /etc/apache2/sites-available/redesfc-le-ssl.conf
+\end{lstlisting}
+
+Las configuraciones deben de verse como en la
+Figura \ref{fig:web-mapache}.
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.45\textwidth]{web/mapache80}
+  \includegraphics[width=0.45\textwidth]{web/mapache443}
+  \caption{Configuraci\'on del servidor Apache como proxy.}
+  \label{fig:web-mapache}
+\end{figure}
+
+Las l\'ineas que nos interesan son aquellas que empiezan
+con la palabra ``Proxy'', en donde se activa la opci\'on
+\ttt{ProxyPreserveHost}, que indica a Apache que debe
+mantener la direcci\'on url del host que actua como proxy,
+y las opciones \ttt{ProxyPass} y \ttt{ProxyReverse}, que
+indican a Apache que redireccione las peticiones hacia y
+desde el servidor al que est\'a sirviendo como proxy (en
+nuestro caso, el servidor de aplicaci\'on).
+
+En las misma figura es posible notar que tenemos
+la l\'inea \ttt{Options -Indexes}, que deshabilita
+la opci\'on de enlistar los contenidos de las carpetas
+que se encuentran en nuestro directorio ra\'iz.
+
+Adicionalmente, y tambi\'en en la Figura \ref{fig:web-mapache},
+es posible encontrar algunas l\'ineas que empiezan con
+la palabra ``Rewrite''.   La finalidad de estas es lograr
+la redirecci\'on de
+\href{http://octogatos.tech}{http://octogatos.tech},
+\href{http://www.octogatos.tech}{http://www.octogatos.tech}, y
+\href{https://www.octogatos.tech}{https://www.octogatos.tech}
+a \href{https://octogatos.tech}{https://octogatos.tech}.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%               %%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Configuraci\'on NAT}
 
