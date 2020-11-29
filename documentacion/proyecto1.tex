@@ -101,6 +101,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Diagrama}
+\label{sec:diagrama}
 
 El diagrama de la configuraci\'on de nuestros
 servidores se muestra en la Figura \ref{fig:diagrama}.
@@ -147,7 +148,7 @@ servidores.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\newpage
+
 \section{Direcciones IPv6}
 
 Las instancias correspondientes al servidor web y al
@@ -180,7 +181,7 @@ nosotros tuvimos que hacerlo a mano.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\newpage
+
 \section{Registros DNS}
 \label{sec:dns}
 
@@ -312,7 +313,7 @@ la Figura \ref{fig:createdRecord}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\newpage
+
 \section{Cloudflare}
 
 Se utilaron tres servicios de
@@ -387,7 +388,7 @@ Figura \ref{fig:cfEncryption}.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\newpage
+
 \section{Web Server}
 
 Para nuestro Web Server utilizamos la instancia EC2 que
@@ -520,7 +521,7 @@ a \href{https://octogatos.tech}{https://octogatos.tech}.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\newpage
+
 \section{Data Server}
 
 Para la configuración inicial del data server, lo primordial
@@ -684,18 +685,97 @@ TLSv1.3, por lo que esta conexi\'on est\'a cifrada.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\newpage
+
 \section{Email Server}
 
 Para configurar el servidor de correo electr\'onico
-configuramos una instancia EC2 semejante a la que
+utilizamos una instancia EC2 semejante a la que
 se utiliz\'o para el servidor web.   Tambi\'en cuenta
-con una direcci\'on IP el\'astica y
+con una direcci\'on IP el\'astica y con un certificado
+emitido por \href{https://letsencrypt.org/}{Let's
+Encrypt} que fue configurado en la instancia mediante
+\href{https://certbot.eff.org/}{Certbot}.   Adem\'as
+se utiliz\'o el subdominio \ttt{mail.octogatos.tech}
+asociado a la IP el\'astica de esta instancia.   Es
+posible verificar que el certificado funciona
+correctamente entrando a
+\href{https://mail.octogatos.tech/}{https://mail.octogatos.tech/}
+y revisando el certificado en cualquier navegador.
+La configuraci\'on de la instancia en AWS puede
+revisarse en la Figura \ref{fig:email-instancia},
+incluyendo la direcci\'on IPv6.
 
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\textwidth]{email/instancia}
+  \caption{Configuraci\'on EC2 del servidor de correo.}
+  \label{fig:email-instancia}
+\end{figure}
 
+Como se mencion\'o en la Secci\'on \ref{sec:diagrama},
+esta instancia cuenta con su propia subred p\'ublica,
+cuya configuraci\'on puede verse en la Figura
+\ref{fig:email-subred}.
 
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\textwidth]{email/subred}
+  \caption{Configuraci\'on de la segunda subred p\'ublica.}
+  \label{fig:email-subred}
+\end{figure}
 
+Adicionalmente, es necesario tener un grupo de
+seguridad espec\'ifico para esta instancia, pues
+es necesario tener abiertos varios puertos para
+los distintos servicios que se van a ofrecer:
+80 (HTTP para webmail), 110 (POP3), 995 (POP3S),
+993 (IMAPS), 22 (SSH), 25 (SMTP), 143 (IMAP),
+465 (SMTPS), 587 (SMTPS), 443 (HTTPS).   La
+configuraci\'on de las reglas de entrada en este
+grupo de seguridad pueden verse en la Figura
+\ref{fig:email-seguridad}.
 
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\textwidth]{email/seguridad}
+  \caption{Configuraci\'on del grupo de seguridad para
+           el servidor de correo.}
+  \label{fig:email-seguridad}
+\end{figure}
+
+Para configurar el servidor de correo, se siguieron
+los siguientes tutoriales:
+
+\begin{enumerate}
+  \item \href{https://www.linuxbabe.com/mail-server/setup-basic-postfix-mail-sever-ubuntu}{Build Your Own Email Server on Ubuntu: Basic Postfix Setup}
+
+  \item \href{https://www.linuxbabe.com/mail-server/secure-email-server-ubuntu-postfix-dovecot}{Set up Dovecot IMAP server and TLS encryption}
+
+  \item \href{https://www.linuxbabe.com/mail-server/postfixadmin-create-virtual-mailboxes-ubuntu-20-04}{Create Virtual Mailboxes with PostfixAdmin}
+
+  \item \href{https://www.linuxbabe.com/mail-server/setting-up-dkim-and-spf}{Creating SPF and DKIM record to get through spam filters}
+
+  \item \href{https://www.linuxbabe.com/mail-server/create-dmarc-record}{Setting Up DMARC to protect your domain reputation}
+\end{enumerate}
+
+Se utiliz\'o \href{http://www.postfix.org/}{Postfix} como
+servidor SMTP.   Como prerrequisitos, se configur\'o el
+nombre de dominio \ttt{mail.octogatos.tech}, y se cre\'o
+un registro MX para \ttt{octogatos.tech} que apunta hacia
+\ttt{mail.octogatos.tech}, adem\'as de registros \ttt{A},
+\ttt{AAAA} y \ttt{PTR} para \ttt{mail.octogatos.tech}.
+El tercero de estos registros se configur\'o a trav\'es
+de \href{https://aws-portal.amazon.com/gp/aws/html-forms-controller/contactus/ec2-email-limit-rdns-request}{esta solicitud}
+a AWS (se necesita tener sesi\'on iniciada), en la que
+tambi\'en se pidi\'o la apertura del puerto 25.
+
+La instalaci\'on de Postfix se realiz\'o con los
+siguientes comandos.
+\begin{lstlisting}
+$ sudo apt-get update
+
+$ sudo apt-get install postfix -y
+\end{lstlisting}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -706,7 +786,7 @@ con una direcci\'on IP el\'astica y
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\newpage
+
 \section{Configuraci\'on NAT}
 
 Como se mencion\'o con anterioridad, con la finalidad
