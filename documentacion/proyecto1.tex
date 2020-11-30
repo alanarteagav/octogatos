@@ -559,8 +559,8 @@ Y ahora podemos acceder sin problema alguno a Postgres:
 \end{figure}
 
 Y creamos nuestra base de datos \ttt{octogatos} que va a ser
-utilizada en este proyecto, en la que sólo el usuario 
-\ttt{postgres} va a poder accesar.
+utilizada en este proyecto, en la que sólo el usuario
+\ttt{postgres} va a poder acceder.
 
 \begin{figure}[H]
   \centering
@@ -677,11 +677,11 @@ TLSv1.3, por lo que esta conexi\'on est\'a cifrada.
 
 
 \section{Base De Datos}
-Como se mencionó, para este proyecto se decidió utilizar 
-el marco de trabajo \textit{Django} pues nos facilita el 
-trabajo en múltiples áreas, una de ellas siendo la base 
-de datos y su uso para manejar las sesiones y los registros 
-de usuarios. Por este motivo, y por la utilidad de nuestro 
+Como se mencionó, para este proyecto se decidió utilizar
+el marco de trabajo \textit{Django} pues nos facilita el
+trabajo en múltiples áreas, una de ellas siendo la base
+de datos y su uso para manejar las sesiones y los registros
+de usuarios. Por este motivo, y por la utilidad de nuestro
 proyecto, se decidió utilizar únicamente las tablas que crea
 \textit{Django} por omisión. Así, el esquema de
 nuestra base de datos se ve de la siguiente manera:
@@ -1494,25 +1494,31 @@ revisarse en la Figura \ref{fig:NAT-result}.
 \section{FAIL2BAN}
 
 Como nuestros servidores son servicios que se encuentran
-disponibles en el internet, estos son vulnerables a 
+disponibles en el internet, estos son vulnerables a
 ataques maliciosos; por ello los tenemos que proteger para
 que a su vez podamos proteger a nuestro usuarios.
 
 En esta ocasión se hizo uso de la herramienta \ttt{FAIL2BAN}
-que nos permite detectar ataques maliciosos automatizados 
+que nos permite detectar ataques maliciosos automatizados
 como fuerza bruta u otros, detectando las direcciones IP
-de las que provienen estos ataques y baneandolos en el 
-intento, rechazando cualquier futura conexión o petición 
+de las que provienen estos ataques y baneandolos en el
+intento, rechazando cualquier futura conexión o petición
 de ellos por un tiempo definido.
 
-Se procedió entonces a instalar \ttt{FAIL2BAN} en todos 
-nuestros servidores, y se dejaron las configuraciones por 
-omisión de esta instalación. 
+Se procedió entonces a instalar \ttt{FAIL2BAN} en todos
+nuestros servidores, y se dejaron las configuraciones por
+omisión de esta instalación.
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.35\textwidth]{FAIL2BAN/exhibitB}
   \caption{Servicio FAIL2BAN corriendo en el Web Server}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.35\textwidth]{FAIL2BAN/exhibitD}
+  \caption{Servicio FAIL2BAN corriendo en el Mail Server}
 \end{figure}
 
 \begin{figure}[H]
