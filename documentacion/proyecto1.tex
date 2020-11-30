@@ -1,5 +1,7 @@
 \documentclass{article}
 
+\usepackage[utf8]{inputenc}
+
 % Symbols
 \usepackage{amsmath}
 \usepackage{amssymb}
@@ -1452,6 +1454,12 @@ a la del Data Server, la cual tiene las siguientes características:
 
     \item {\bf Creación del repositorio}
 
+    Creamos un repositorio en GitHub (existía un problema con GitLab en la
+    computadora personal), llamado "octogatos", el cual puede hallarse en
+    \begin{center}
+        \url{https://github.com/alanarteagav/octogatos}
+    \end{center}
+
     \item {\bf Programación aplicación}
 
     Primeramente, programamos una aplicación que se habría de alojar en el App
@@ -1737,13 +1745,90 @@ a la del Data Server, la cual tiene las siguientes características:
 
         \item {\it Almacenamiento de contraseñas}
         De la misma forma, Django proporciona funcionalidad para guardar las
-        contraseñas hasheadas en la base de datos, bajo la tabla "auth_user",
+        contraseñas hasheadas en la base de datos, bajo la tabla "auth\_user",
         como se muestra a continuación:
 
         \begin{figure}[H]
             \centering
             \includegraphics[width=0.70\textwidth]{AppServer/r4}
         \end{figure}
+
+        \item {\it Security groups}
+
+        Permitimos conexiones con las demás instancias únicamente a través de
+        ciertos puertos, haciendo uso de {\it security groups}, esto se muestra
+        enseguida:
+
+        \begin{figure}[H]
+            \centering
+            \includegraphics[width=0.70\textwidth]{AppServer/r5}
+        \end{figure}
+
+    \end{itemize}
+
+    \section{Aplicación}
+
+    \begin{itemize}
+        \item {\bf Descripción}
+
+        La aplicación que se halla en el sitio \url{octogatos.tech} es una
+        aplicación sencilla con funcionalidad de registro y login, cuenta con
+        cuatro vistas: {\it índice, registro, login, usuario}.
+
+        Estas vistas se mostrarán a continuación en el manual de usuario de la
+        aplicación.
+
+        Se usó una hoja de estilos CSS simple, para hacer la interfaz amigable
+        para el usuario.
+
+        \item {\bf Manual de uso}
+        Al dirigirse al sitio \url{octogatos.tech}, se despliega la siguiente
+        vista (con unos gatos tocando jazz):
+
+        \begin{figure}[H]
+            \centering
+            \includegraphics[width=0.70\textwidth]{AppServer/z1}
+        \end{figure}
+
+        En esta vista existen dos botones, uno lleva a la vista de registro y
+        otro a la vista de login.
+
+        La vista de registro luce como se muestra a continuación:
+
+        \begin{figure}[H]
+            \centering
+            \includegraphics[width=0.70\textwidth]{AppServer/z2}
+        \end{figure}
+
+        En esta vista se pedirá correo electrónico, nombre de usuario y
+        contraseña para registrarse, se mandará un error si ya existe un usuario
+        registrado con el mismo nombre de usuario.
+
+        La página de login es como se muestra enseguida:
+
+        \begin{figure}[H]
+            \centering
+            \includegraphics[width=0.70\textwidth]{AppServer/z3}
+        \end{figure}
+
+        para hacer login, únicamente se solicitará nombre de usuario y
+        contraseña, en caso de fallo de autenticación, se desplegará un mensaje
+        como en la siguiente figura:
+
+        \begin{figure}[H]
+            \centering
+            \includegraphics[width=0.70\textwidth]{AppServer/z4}
+        \end{figure}
+
+        En el caso de un login exitoso, se despliega la siguiente vista de
+        usuario, donde se despliega su nombre.
+
+
+        \begin{figure}[H]
+            \centering
+            \includegraphics[width=0.70\textwidth]{AppServer/z5}
+        \end{figure}
+
 
     \end{itemize}
 
