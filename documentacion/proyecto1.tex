@@ -261,7 +261,7 @@ IP).
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.44\textwidth]{DNS/defineRecord}
+  \includegraphics[width=0.38\textwidth]{DNS/defineRecord}
   \caption{Configuraci\'on del registro DNS interno para el
            app server usando Route 53.}
   \label{fig:defineRecord}
@@ -281,15 +281,15 @@ a la vez, como se muestra en la Figura
 
 
 Usando Route 53, se configuraron los siguientes
-registros.
+registros internos.
 \begin{enumerate}
   \item A (Web Server - octogatos.tech - 172.31.89.224).
 
   \item A (Email Server - mail.octogatos.tech - 172.31.32.123).
 
-  \item A (App Server - 172.31.4.254).
+  \item A (App Server - app.octogatos.tech - 172.31.4.254).
 
-  \item A (Data Server - 172.31.14.164).
+  \item A (Data Server - data.octogatos.tech - 172.31.14.164).
 
   \item CNAME (Web Server - www.octogatos.tech).
 
@@ -299,7 +299,7 @@ La evidencia de esta configuraci\'on se muestra en
 la Figura \ref{fig:createdRecord}
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.8\textwidth]{DNS/createdRecord}
+  \includegraphics[width=0.9\textwidth]{DNS/createdRecord}
   \caption{Registros DNS internos configurados en Route 53.}
   \label{fig:createdRecord}
 \end{figure}
@@ -1278,6 +1278,17 @@ mostradas en la Figura \ref{fig:email-spfdkimdmarc}.
   \label{fig:email-spfdkimdmarc}
 \end{figure}
 
+La correcta configuraci\'on de estos tres registros,
+junto con el registro PTR de DNS, que se realiz\'o
+mediante una solicitud a AWS, impide que nuestro
+servidor sea utilizado para que terceros no autorizados
+env\'ien correo a trav\'es de nuestro servidor.   En
+otras palabras, nuestro servidor no est\'a en open relay.
+
+Para evaluar la funcionalidad de nuestro servidor de
+correo, por favor manden un correo a
+\ttt{cesar@octogatos.tech}.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1289,35 +1300,44 @@ mostradas en la Figura \ref{fig:email-spfdkimdmarc}.
 
 \section{Configuraci\'on NAT}
 
-Como se mencion\'o con anterioridad, con la finalidad
-de ahorrar cr\'editos de AWS, configuramos una NAT
-independiente de nuestro proyecto, \'unicamente con
-dos subredes, una p\'ublica y una privada, cada una
-con una instancia de EC2.   A continuaci\'on describimos
-c\'omo se llev\'o a cabo dicha configuraci\'on; el punto
-principal es que la instancia que corre en la subred
-privada no tiene una direcci\'on IP p\'ublica, por lo
-que no puede ser accedida desde el exterior de la VPC.
-Para conectarnos a \'esta, utilizamos su direcci\'on
-IP privada desde la instancia que se encuentra corriendo
-en la subred p\'ublica.
+Como se puede ver en la Secci\'on \ref{sec:diagrama},
+se crearon dos subredes p\'ublicas y una privada, con
+un NAT gateway configurado dentro de una de las subredes
+p\'ublicas.   A continuaci\'on describimos c\'omo se
+llev\'o a cabo dicha configuraci\'on; el punto
+principal es que las instancias que corren en la subred
+privada no tienen una direcci\'on IP p\'ublica, por lo
+que no pueden ser accedidas desde el exterior de la VPC.
+Para conectarnos a \'estas, utilizamos su direcci\'on
+IP privada desde las instancias que se encuentran corriendo
+en las subredes p\'ublicas.
 
-Como prerrequisitos, consideramos que ya existe una
-instancia corriendo (la que fue creada en la Pr\'actica
-2), y que est\'a en la subred por omisi\'on, con la
-VPC por omisi\'on, y la Route Table por omisi\'on.
-La configuraci\'on de la subred por omisi\'on, que se
-utilizar\'a como subred p\'ublica, se muestra en la
-Figura \ref{fig:NAT-pubSubnet}.   Adem\'as de la
-explicaci\'on brindada por el profesor en Discord,
-nos apoyamos en el siguiente documento de AWS.
+Como prerrequisitos, consideramos que ya existen las
+dos instancias EC2 p\'ublicas corriendo y que est\'an
+cada una en una red con la configuraci\'on por omisi\'on,
+con la VPC por omisi\'on, y la Route Table por omisi\'on.
+
+La configuraci\'on de estas subredes, que se
+utilizar\'an como subredes p\'ublicas, se muestran en las
+Figuras \ref{fig:NAT-webSubnet} y \ref{fig:NAT-emailSubnet}.
+Adem\'as de la explicaci\'on brindada por el profesor en
+Discord, nos apoyamos en el siguiente documento de AWS.
 \href{https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Scenario2.html}{https://docs.aws.amazon.com/vpc/latest/userguide/VPC\_Scenario2.html}
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=\textwidth]{SSNAT/publicSubnet}
-  \caption{Configuraci\'on de la subred p\'ublica.}
-  \label{fig:NAT-pubSubnet}
+  \includegraphics[width=\textwidth]{NAT/webSubnet}
+  \caption{Configuraci\'on de la subred p\'ublica del
+           servidor web.}
+  \label{fig:NAT-webSubnet}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{NAT/emailSubnet}
+  \caption{Configuraci\'on de la subred p\'ublica del
+           servidor web.}
+  \label{fig:NAT-emailSubnet}
 \end{figure}
 
 \begin{enumerate}
@@ -1337,23 +1357,33 @@ nos apoyamos en el siguiente documento de AWS.
     siguiente documento de AWS: \href{https://docs.aws.amazon.com/cloudhsm/latest/userguide/create-subnets.html}{https://docs.aws.amazon.com/cloudhsm/latest/userguide/create-subnets.html}.
     \begin{figure}[H]
       \centering
-      \includegraphics[width=0.8\textwidth]{SSNAT/privateSubnet}
+      \includegraphics[width=0.8\textwidth]{NAT/privateSubnet}
       \caption{Configuraci\'on de la subred privada.}
       \label{fig:NAT-priSubnet}
     \end{figure}
 
-  \item Posteriormente, creamos una nueva instancia,
+  \item Posteriormente, creamos dos nuevas instancias,
     en la misma \'area de disponibilidad que la instancia
-    anterior, pero en la subrede privada reci\'en creada.
-    La configuraci\'on de esta instancia puede verse en
-    la Figura \ref{fig:NAT-priInstance}.   Es importante hacer
-    notar que esta instancia no cuenta con una direcci\'on
-    IPv4.
+    correspondiente al servidor web, pero en la subred
+    privada reci\'en creada. La configuraci\'on de estas
+    instancias puede verse en las Figuras
+    \ref{fig:NAT-appInstance} y \ref{fig:NAT-dataInstance}.
+    Es importante hacer notar que estas instancias no cuentan
+    con una direcciones IPv4 p\'ublicas.
     \begin{figure}[H]
       \centering
-      \includegraphics[width=\textwidth]{SSNAT/privateInstance}
-      \caption{Configuraci\'on de la instancia privada.}
-      \label{fig:NAT-priInstance}
+      \includegraphics[width=\textwidth]{NAT/appInstance}
+      \caption{Configuraci\'on de la instancia correspondiente
+               al app server.}
+      \label{fig:NAT-appInstance}
+    \end{figure}
+
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=\textwidth]{NAT/dataInstance}
+      \caption{Configuraci\'on de la instancia correspondiente
+               al data server.}
+      \label{fig:NAT-dataInstance}
     \end{figure}
 
   \item El siguiente paso fue crear el NAT gateway.   La
@@ -1366,7 +1396,7 @@ nos apoyamos en el siguiente documento de AWS.
     \href{https://aws.amazon.com/premiumsupport/knowledge-center/nat-gateway-vpc-private-subnet/}{https://aws.amazon.com/premiumsupport/knowledge-center/nat-gateway-vpc-private-subnet/}
     \begin{figure}[H]
       \centering
-      \includegraphics[width=\textwidth]{SSNAT/nat}
+      \includegraphics[width=\textwidth]{NAT/nat}
       \caption{Configuraci\'on del NAT gateway.}
       \label{fig:NAT-nat}
     \end{figure}
@@ -1378,7 +1408,7 @@ nos apoyamos en el siguiente documento de AWS.
     verse en la Figura \ref{fig:NAT-routeTable}.
     \begin{figure}[H]
       \centering
-      \includegraphics[width=\textwidth]{SSNAT/routeTable}
+      \includegraphics[width=\textwidth]{NAT/routeTable}
       \caption{Configuraci\'on de la nueva tabla de ruteo.}
       \label{fig:NAT-routeTable}
     \end{figure}
@@ -1389,7 +1419,7 @@ nos apoyamos en el siguiente documento de AWS.
     \ref{fig:subnetRouteTable}.
     \begin{figure}[H]
       \centering
-      \includegraphics[width=\textwidth]{SSNAT/subnetRouteTable}
+      \includegraphics[width=\textwidth]{NAT/subnetRouteTable}
       \caption{Subred privada asociada a la nueva tabla
       de ruteo.}
       \label{fig:subnetRouteTable}
@@ -1403,14 +1433,17 @@ que funcione correctamente con los siguientes pasos.
   \item Ingresar a la instancia p\'ublica, con el
     comando
 \begin{lstlisting}
-$ ssh -i "practica2.pem" ubuntu@ec2-34-201-69-182.compute-1.amazonaws.com
+$ ssh -i "practica2.pem" ssh -i "practica2.pem" ubuntu@ec2-52-87-39-6.compute-1.amazonaws.com
 \end{lstlisting}
 
-  \item Una vez dentro de la instancia p\'ublica, ingresar
-    a la privada mediante su direcci\'on IP privada, con
-    el comando
+  \item Una vez dentro de alguna de las instancias p\'ublicas
+    (en el ejemplo el servidor web) ingresar a alguna de las
+    privadas (en el ejemplo el servidor de aplicaci\'on)
+    mediante su direcci\'on IP privada, o en
+    nuestro caso con su nombre de dominio privado,
+    previamente configurado con Route 53, con el comando
 \begin{lstlisting}
-$ ssh -i "practica2.pem" ubuntu@172.31.0.253
+$ ssh -i "practica2.pem" ubuntu@app.octogatos.tech
 \end{lstlisting}
 
   \item Verificar la conectividad a internet, por
@@ -1422,25 +1455,59 @@ $ ping google.com
   \item Al no contar con direcci\'on IP p\'ublica
     ni siquiera es posible intentar conectarnos a
     la instancia privada externamente, pues su
-    direcci\'on IP privada es relativa a la subred
-    en la que est\'a.
+    direcci\'on IP privada, as\'i como su nombre
+    de dominio privado, son relativos a la VPC.
 \end{enumerate}
 
-El resultado de los pasos antes descritos puede
-revisarse en la Figura \ref{fig:NAT-result}.
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.35\textwidth]{SSNAT/inception}
-  \caption{It's like inception!}
-\end{figure}
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=\textwidth]{SSNAT/result}
+  \includegraphics[width=\textwidth]{NAT/result}
   \caption{Subred privada asociada a la nueva tabla
   de ruteo.}
   \label{fig:NAT-result}
 \end{figure}
 
+El resultado de los pasos antes descritos puede
+revisarse en la Figura \ref{fig:NAT-result}.
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.35\textwidth]{NAT/inception}
+  \caption{It's like inception!}
+\end{figure}
+
+\section{Comentarios sobre el desarrollo del proyecto}
+
+En general, nos enfrentamos a las dificultades propias
+de un proyecto de este tipo; por suerte no tuvimos
+contratiempos m\'as all\'a de problemas de configuraci\'on,
+que finalmente fueron arreglados.   Sin embargo, en gran
+medida las cosas funcionaron bien gracias a que un
+integrante del equipo (Mauricio Carrasco) ten\'ia 100
+cr\'editos de AWS, de otro modo, no hubi\'eramos conseguido
+realizar la configuraci\'on completa con 30 cr\'editos.
+
+Estamos muy contentos de haber podido hacer el proyecto
+completo como se plante\'o orignalmente, pues nos permiti\'o
+ver el funcionamiento en conjunto, y la utilidad de cada
+una de las componentes de la configuraci\'on de nuestro
+servicio.   Este desarrollo nos brind\'o una idea general
+de c\'omo funciona un servicio de este tipo en la vida
+real, principalmente sobre todas las decisiones que se
+pueden tomar para hacer la configuraci\'on (y agradecemos
+que ustedes hayan tomado la mayor parte de las decisiones
+por nosotros).
+
+Una nota importante sobre las referencias t\'ecnicas.
+Decidimos incluir las referencias t\'ecnicas en el cuerpo
+del texto, como hiperv\'inculos en los lugares donde la
+informaci\'on correspondiente resulta relevante.   Por
+esta raz\'on, no tenemos una secci\'on especial para
+las referencias t\'ecnicas.
+
+Respecto a este documento, una nota importante es que,
+aunque algunas im\'agenes tienen un tama\~no reducido,
+por motivos de formato, la mayor\'ia de ellas tienen
+una resoluci\'on bastante alta, por lo que es posible
+examinarlas haciendo zoom sobre ellas.
 
 \end{document}
