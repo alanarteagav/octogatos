@@ -1547,6 +1547,206 @@ a la del Data Server, la cual tiene las siguientes características:
       \caption{Instalación biblioteca psycopg2}
     \end{figure}
 
+    A continuación, mostramos la estructura del proyecto Django:
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=0.35\textwidth]{AppServer/e1}
+    \end{figure}
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=0.35\textwidth]{AppServer/e2}
+    \end{figure}
+
+    Algunas partes que vale la pena describir son:
+    \begin{itemize}
+        \item {\bf app:} Carpeta con archivos python base para configuración.
+        \item {\bf octocalico:} Carpeta con archivos python que dan la lógica
+        de la aplicación.
+        \item {\bf static:} Carpeta con archivos estáticos (css e imágenes).
+        \item {\bf templates:} Carpeta con vistas HTML.
+    \end{itemize}
+
+    Una vez definida la lógica de la aplicación, se aloja en el repositorio, de
+    donde se clonará en el App Server.
+
+    \item {\bf Clonación y puesta en marcha de la aplicación}
+
+    Ya con la aplicación en el repositorio, accedemos a nuestra instancia:
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=0.70\textwidth]{AppServer/i1}
+      \caption{Conexión instancia}
+    \end{figure}
+
+    Actualizamos los canales de software de Ubuntu mediante el siguiente
+    comando:
+    \begin{lstlisting}
+    $ sudo apt get update
+    \end{lstlisting}
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=0.70\textwidth]{AppServer/i2}
+    \end{figure}
+
+    Instalamos ahora versiones recientes de Python, pip, apache2, virtualenv:
+
+    \begin{lstlisting}
+    $ sudo apt-get install python3-pip apache2 libapache2-mod-wsgi-py3
+    $ sudo pip3 install virtualenv
+    \end{lstlisting}
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=0.70\textwidth]{AppServer/i3}
+    \end{figure}
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=0.70\textwidth]{AppServer/i4}
+    \end{figure}
+
+    Después, creamos un directorio y al igual que con nuestro equipo personal,
+    creamos un ambiente virtual para python, luego de ello, clonamos el
+    repositorio e instalamos la biblioteca de Django:
+
+    \begin{lstlisting}
+    $ virtualenv octocats
+    $ git clone https://github.com/alanarteagav/octogatos.git
+    $ source octocats/bin/activate
+    $ pip3 install django
+    \end{lstlisting}
+
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=0.70\textwidth]{AppServer/i5}
+    \end{figure}
+
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=0.70\textwidth]{AppServer/i6}
+    \end{figure}
+
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=0.70\textwidth]{AppServer/i7}
+    \end{figure}
+
+    Ahora, instalamos Postgres (pues se necesita un archivo de configuración
+    para la biblioteca psycopg2), y la biblioteca psycopg2 antes mencionada,
+    usamos:
+
+    \begin{lstlisting}
+    $ sudo apt-get -y install postgresql
+    $ sudo apt install libpq-dev
+    $ pip3 install psycopg2
+    \end{lstlisting}
+
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=0.70\textwidth]{AppServer/i8}
+    \end{figure}
+
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=0.70\textwidth]{AppServer/i9}
+    \end{figure}
+
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=0.70\textwidth]{AppServer/i10}
+    \end{figure}
+
+    Ahora, editamos ciertas configuraciones en los archivos de configuración
+    de Django para que sea posible servir la aplicación mediante apache.
+
+
+    Creamos un nuevo archivo de configuración para sitios
+    disponibles de apache, dirigiendonos al directorio \texttt{/etc/apache2/
+    sites-available/}, y editando mediante:
+    \begin{lstlisting}
+    $ sudo nano octogatos.conf
+    \end{lstlisting}
+
+    El archivo creado se muestra a continuación:
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=0.70\textwidth]{AppServer/i11}
+    \end{figure}
+
+    Posteriormente, retiramos la confguración por omisión de Apache, y la
+    reemplazamos por la nueva configuración mediante:
+    \begin{lstlisting}
+    $ sudo a2dissite 000-default.conf
+    $ sudo a2ensite octogatos.conf
+    $ systemctl reload apache2
+    \end{lstlisting}
+
+    Podemos observar cómo después de la configuración, se muestra correctamente
+    en línea la primera página de la aplicación creada, en el sitio
+    \url{www.octogatos.tech}:
+
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=0.70\textwidth]{AppServer/i12}
+    \end{figure}
+
+    \item {\bf Conexión a la base de datos}
+
+    Finalmente, procedemos a conectar nuestra aplicación con la base de datos.
+
+    Modificamos en el archivo \texttt{settings.py} los datos de la base de
+    datos como se muestra a continuación, para comunicarnos con el Data Server
+    en el puerto que se muestra:
+
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=0.70\textwidth]{AppServer/r1}
+    \end{figure}
+
+    Luego, copiamos las tablas necesarias para la aplicación en la base de datos
+    mediante
+    \begin{lstlisting}
+    $ python3 manage.py migrate
+    \end{lstlisting}
+
+    lo cual nos muestra un mensaje de éxito como a continuación:
+
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=0.70\textwidth]{AppServer/r2}
+    \end{figure}
+
+    posteriormente, reiniciamos nuestro servidor apache
+
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.70\textwidth]{AppServer/r3}
+    \end{figure}
+
+    \item {\bf Puntos a considerar}
+
+    \begin{itemize}
+        \item {\it SQL Injection}
+
+        El framework usado para desarrollar la aplicación "Django" ya cuenta con
+        protección ante inyecciones SQL, como puede verse en la página:
+
+        \begin{center}
+            \url{https://docs.djangoproject.com/en/3.1/topics/security/}
+        \end{center}
+
+        En la sección "SQL injection protection"
+
+        \item {\it Almacenamiento de contraseñas}
+        De la misma forma, Django proporciona funcionalidad para guardar las
+        contraseñas hasheadas en la base de datos, bajo la tabla "auth_user",
+        como se muestra a continuación:
+
+        \begin{figure}[H]
+            \centering
+            \includegraphics[width=0.70\textwidth]{AppServer/r4}
+        \end{figure}
+
+    \end{itemize}
+
 
 
 \end{enumerate}
