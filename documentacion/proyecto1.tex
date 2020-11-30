@@ -1443,4 +1443,112 @@ revisarse en la Figura \ref{fig:NAT-result}.
 \end{figure}
 
 
+\section{App Server}
+
+Para la configuración del App Server, se creó una instancia EC2 similar
+a la del Data Server, la cual tiene las siguientes características:
+
+\begin{enumerate}
+
+    \item {\bf Creación del repositorio}
+
+    \item {\bf Programación aplicación}
+
+    Primeramente, programamos una aplicación que se habría de alojar en el App
+    Server, usando el framework {\it Django}, el cual está programado en
+    Python, para ello, es necesario primero instalar un entorno virtual de
+    Python, para no alterar ni conflictuar ninguna instalación previa de Python.
+
+    Así, se usa en nuestro equipo de cómputo el siguiente comando (en caso de
+    no tener instalado el paquete \texttt{virtualenv}):
+
+    \begin{lstlisting}
+    $ sudo pip3 install virtualenv
+    \end{lstlisting}
+
+    Una vez con tal biblioteca de Python instalada se procede a crear un
+    ambiente virtual (al cual llamamos octocats):
+    \begin{lstlisting}
+    $ virtualenv octocats
+    \end{lstlisting}
+
+    En la siguiente figura, mostramos pasos que se detallan posteriormente:
+
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=0.85\textwidth]{AppServer/f1}
+      \caption{Virtualenv \& Django}
+    \end{figure}
+
+    Activamos el ambiente virtual recién creado:
+    \begin{lstlisting}
+    $ source octocats/bin/activate
+    \end{lstlisting}
+
+    Una vez con el ambiente virtual de Python 3 configurado, instalamos la
+    biblioteca Django (usando pip):
+    \begin{lstlisting}
+    $ pip3 install django
+    \end{lstlisting}
+
+    Luego, creamos un proyecto de Django (después de un tiempo de pensarlo) se
+    decidió llamar al proyecto "app" bajo el repositorio, la cual creamos así:
+    \begin{lstlisting}
+    $ django-admin startproject app
+    \end{lstlisting}
+
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=0.75\textwidth]{AppServer/f2}
+      \caption{Creación proyecto App}
+    \end{figure}
+
+    Una vez creado el proyecto, nos ubicamos en él, y corroboramos que funcione,
+    corriendo el siguiente comando:
+    \begin{lstlisting}
+    $ python manage.py runserver
+    \end{lstlisting}
+
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=0.75\textwidth]{AppServer/f3}
+      \caption{Inicio servidor}
+    \end{figure}
+
+    El cual corre un servidor en el puerto \texttt{8000} del localhost, el cual
+    en el navegador despliega una página como la que se muestra a continuación:
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=0.75\textwidth]{AppServer/f4}
+      \caption{Página de inicio en puerto 8000}
+    \end{figure}
+
+    Hecho esto, creamos nuestra propia lógica para la aplicación, distinta a la
+    que da Django por omisión de la siguiente forma (llamamos a la nueva lógica
+    de la aplicación "octocalico"):
+    \begin{lstlisting}
+    $ python manage.py startapp octocalico
+    \end{lstlisting}
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=0.75\textwidth]{AppServer/f5}
+      \caption{Creación lógica de aplicación}
+    \end{figure}
+
+    Instalamos además una biblioteca necesaria para la conexión a un
+    sistema manejador de base de datos Postgres, necesario para guardar
+    información de la aplicación:
+    \begin{lstlisting}
+    $ pip3 install psycopg2
+    \end{lstlisting}
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=0.65\textwidth]{AppServer/f6}
+      \caption{Instalación biblioteca psycopg2}
+    \end{figure}
+
+
+
+\end{enumerate}
+
 \end{document}
