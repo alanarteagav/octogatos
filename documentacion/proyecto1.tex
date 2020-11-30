@@ -1,5 +1,7 @@
 \documentclass{article}
 
+\usepackage[utf8]{inputenc}
+
 % Symbols
 \usepackage{amsmath}
 \usepackage{amssymb}
@@ -1578,5 +1580,396 @@ aunque algunas im\'agenes tienen un tama\~no reducido,
 por motivos de formato, la mayor\'ia de ellas tienen
 una resoluci\'on bastante alta, por lo que es posible
 examinarlas haciendo zoom sobre ellas.
+
+\section{App Server}
+
+Para la configuración del App Server, se creó una instancia EC2 similar
+a la del Data Server, la cual tiene las siguientes características:
+
+\begin{enumerate}
+
+    \item {\bf Creación del repositorio}
+
+    Creamos un repositorio en GitHub (existía un problema con GitLab en la
+    computadora personal), llamado "octogatos", el cual puede hallarse en
+    \begin{center}
+        \url{https://github.com/alanarteagav/octogatos}
+    \end{center}
+
+    \item {\bf Programación aplicación}
+
+    Primeramente, programamos una aplicación que se habría de alojar en el App
+    Server, usando el framework {\it Django}, el cual está programado en
+    Python, para ello, es necesario primero instalar un entorno virtual de
+    Python, para no alterar ni conflictuar ninguna instalación previa de Python.
+
+    Así, se usa en nuestro equipo de cómputo el siguiente comando (en caso de
+    no tener instalado el paquete \texttt{virtualenv}):
+
+    \begin{lstlisting}
+    $ sudo pip3 install virtualenv
+    \end{lstlisting}
+
+    Una vez con tal biblioteca de Python instalada se procede a crear un
+    ambiente virtual (al cual llamamos octocats):
+    \begin{lstlisting}
+    $ virtualenv octocats
+    \end{lstlisting}
+
+    En la siguiente figura, mostramos pasos que se detallan posteriormente:
+
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=0.85\textwidth]{AppServer/f1}
+      \caption{Virtualenv \& Django}
+    \end{figure}
+
+    Activamos el ambiente virtual recién creado:
+    \begin{lstlisting}
+    $ source octocats/bin/activate
+    \end{lstlisting}
+
+    Una vez con el ambiente virtual de Python 3 configurado, instalamos la
+    biblioteca Django (usando pip):
+    \begin{lstlisting}
+    $ pip3 install django
+    \end{lstlisting}
+
+    Luego, creamos un proyecto de Django (después de un tiempo de pensarlo) se
+    decidió llamar al proyecto "app" bajo el repositorio, la cual creamos así:
+    \begin{lstlisting}
+    $ django-admin startproject app
+    \end{lstlisting}
+
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=0.75\textwidth]{AppServer/f2}
+      \caption{Creación proyecto App}
+    \end{figure}
+
+    Una vez creado el proyecto, nos ubicamos en él, y corroboramos que funcione,
+    corriendo el siguiente comando:
+    \begin{lstlisting}
+    $ python manage.py runserver
+    \end{lstlisting}
+
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=0.75\textwidth]{AppServer/f3}
+      \caption{Inicio servidor}
+    \end{figure}
+
+    El cual corre un servidor en el puerto \texttt{8000} del localhost, el cual
+    en el navegador despliega una página como la que se muestra a continuación:
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=0.75\textwidth]{AppServer/f4}
+      \caption{Página de inicio en puerto 8000}
+    \end{figure}
+
+    Hecho esto, creamos nuestra propia lógica para la aplicación, distinta a la
+    que da Django por omisión de la siguiente forma (llamamos a la nueva lógica
+    de la aplicación "octocalico"):
+    \begin{lstlisting}
+    $ python manage.py startapp octocalico
+    \end{lstlisting}
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=0.75\textwidth]{AppServer/f5}
+      \caption{Creación lógica de aplicación}
+    \end{figure}
+
+    Instalamos además una biblioteca necesaria para la conexión a un
+    sistema manejador de base de datos Postgres, necesario para guardar
+    información de la aplicación:
+    \begin{lstlisting}
+    $ pip3 install psycopg2
+    \end{lstlisting}
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=0.65\textwidth]{AppServer/f6}
+      \caption{Instalación biblioteca psycopg2}
+    \end{figure}
+
+    A continuación, mostramos la estructura del proyecto Django:
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=0.35\textwidth]{AppServer/e1}
+    \end{figure}
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=0.35\textwidth]{AppServer/e2}
+    \end{figure}
+
+    Algunas partes que vale la pena describir son:
+    \begin{itemize}
+        \item {\bf app:} Carpeta con archivos python base para configuración.
+        \item {\bf octocalico:} Carpeta con archivos python que dan la lógica
+        de la aplicación.
+        \item {\bf static:} Carpeta con archivos estáticos (css e imágenes).
+        \item {\bf templates:} Carpeta con vistas HTML.
+    \end{itemize}
+
+    Una vez definida la lógica de la aplicación, se aloja en el repositorio, de
+    donde se clonará en el App Server.
+
+    \item {\bf Clonación y puesta en marcha de la aplicación}
+
+    Ya con la aplicación en el repositorio, accedemos a nuestra instancia:
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=0.70\textwidth]{AppServer/i1}
+      \caption{Conexión instancia}
+    \end{figure}
+
+    Actualizamos los canales de software de Ubuntu mediante el siguiente
+    comando:
+    \begin{lstlisting}
+    $ sudo apt get update
+    \end{lstlisting}
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=0.70\textwidth]{AppServer/i2}
+    \end{figure}
+
+    Instalamos ahora versiones recientes de Python, pip, apache2, virtualenv:
+
+    \begin{lstlisting}
+    $ sudo apt-get install python3-pip apache2 libapache2-mod-wsgi-py3
+    $ sudo pip3 install virtualenv
+    \end{lstlisting}
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=0.70\textwidth]{AppServer/i3}
+    \end{figure}
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=0.70\textwidth]{AppServer/i4}
+    \end{figure}
+
+    Después, creamos un directorio y al igual que con nuestro equipo personal,
+    creamos un ambiente virtual para python, luego de ello, clonamos el
+    repositorio e instalamos la biblioteca de Django:
+
+    \begin{lstlisting}
+    $ virtualenv octocats
+    $ git clone https://github.com/alanarteagav/octogatos.git
+    $ source octocats/bin/activate
+    $ pip3 install django
+    \end{lstlisting}
+
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=0.70\textwidth]{AppServer/i5}
+    \end{figure}
+
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=0.70\textwidth]{AppServer/i6}
+    \end{figure}
+
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=0.70\textwidth]{AppServer/i7}
+    \end{figure}
+
+    Ahora, instalamos Postgres (pues se necesita un archivo de configuración
+    para la biblioteca psycopg2), y la biblioteca psycopg2 antes mencionada,
+    usamos:
+
+    \begin{lstlisting}
+    $ sudo apt-get -y install postgresql
+    $ sudo apt install libpq-dev
+    $ pip3 install psycopg2
+    \end{lstlisting}
+
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=0.70\textwidth]{AppServer/i8}
+    \end{figure}
+
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=0.70\textwidth]{AppServer/i9}
+    \end{figure}
+
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=0.70\textwidth]{AppServer/i10}
+    \end{figure}
+
+    Ahora, editamos ciertas configuraciones en los archivos de configuración
+    de Django para que sea posible servir la aplicación mediante apache.
+
+
+    Creamos un nuevo archivo de configuración para sitios
+    disponibles de apache, dirigiendonos al directorio \texttt{/etc/apache2/
+    sites-available/}, y editando mediante:
+    \begin{lstlisting}
+    $ sudo nano octogatos.conf
+    \end{lstlisting}
+
+    El archivo creado se muestra a continuación:
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=0.70\textwidth]{AppServer/i11}
+    \end{figure}
+
+    Posteriormente, retiramos la confguración por omisión de Apache, y la
+    reemplazamos por la nueva configuración mediante:
+    \begin{lstlisting}
+    $ sudo a2dissite 000-default.conf
+    $ sudo a2ensite octogatos.conf
+    $ systemctl reload apache2
+    \end{lstlisting}
+
+    Podemos observar cómo después de la configuración, se muestra correctamente
+    en línea la primera página de la aplicación creada, en el sitio
+    \url{www.octogatos.tech}:
+
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=0.70\textwidth]{AppServer/i12}
+    \end{figure}
+
+    \item {\bf Conexión a la base de datos}
+
+    Finalmente, procedemos a conectar nuestra aplicación con la base de datos.
+
+    Modificamos en el archivo \texttt{settings.py} los datos de la base de
+    datos como se muestra a continuación, para comunicarnos con el Data Server
+    en el puerto que se muestra:
+
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=0.70\textwidth]{AppServer/r1}
+    \end{figure}
+
+    Luego, copiamos las tablas necesarias para la aplicación en la base de datos
+    mediante
+    \begin{lstlisting}
+    $ python3 manage.py migrate
+    \end{lstlisting}
+
+    lo cual nos muestra un mensaje de éxito como a continuación:
+
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=0.70\textwidth]{AppServer/r2}
+    \end{figure}
+
+    posteriormente, reiniciamos nuestro servidor apache
+
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.70\textwidth]{AppServer/r3}
+    \end{figure}
+
+    \item {\bf Puntos a considerar}
+
+    \begin{itemize}
+        \item {\it SQL Injection}
+
+        El framework usado para desarrollar la aplicación "Django" ya cuenta con
+        protección ante inyecciones SQL, como puede verse en la página:
+
+        \begin{center}
+            \url{https://docs.djangoproject.com/en/3.1/topics/security/}
+        \end{center}
+
+        En la sección "SQL injection protection"
+
+        \item {\it Almacenamiento de contraseñas}
+        De la misma forma, Django proporciona funcionalidad para guardar las
+        contraseñas hasheadas en la base de datos, bajo la tabla "auth\_user",
+        como se muestra a continuación:
+
+        \begin{figure}[H]
+            \centering
+            \includegraphics[width=0.70\textwidth]{AppServer/r4}
+        \end{figure}
+
+        \item {\it Security groups}
+
+        Permitimos conexiones con las demás instancias únicamente a través de
+        ciertos puertos, haciendo uso de {\it security groups}, esto se muestra
+        enseguida:
+
+        \begin{figure}[H]
+            \centering
+            \includegraphics[width=0.70\textwidth]{AppServer/r5}
+        \end{figure}
+
+    \end{itemize}
+
+    \section{Aplicación}
+
+    \begin{itemize}
+        \item {\bf Descripción}
+
+        La aplicación que se halla en el sitio \url{octogatos.tech} es una
+        aplicación sencilla con funcionalidad de registro y login, cuenta con
+        cuatro vistas: {\it índice, registro, login, usuario}.
+
+        Estas vistas se mostrarán a continuación en el manual de usuario de la
+        aplicación.
+
+        Se usó una hoja de estilos CSS simple, para hacer la interfaz amigable
+        para el usuario.
+
+        \item {\bf Manual de uso}
+        Al dirigirse al sitio \url{octogatos.tech}, se despliega la siguiente
+        vista (con unos gatos tocando jazz):
+
+        \begin{figure}[H]
+            \centering
+            \includegraphics[width=0.70\textwidth]{AppServer/z1}
+        \end{figure}
+
+        En esta vista existen dos botones, uno lleva a la vista de registro y
+        otro a la vista de login.
+
+        La vista de registro luce como se muestra a continuación:
+
+        \begin{figure}[H]
+            \centering
+            \includegraphics[width=0.70\textwidth]{AppServer/z2}
+        \end{figure}
+
+        En esta vista se pedirá correo electrónico, nombre de usuario y
+        contraseña para registrarse, se mandará un error si ya existe un usuario
+        registrado con el mismo nombre de usuario.
+
+        La página de login es como se muestra enseguida:
+
+        \begin{figure}[H]
+            \centering
+            \includegraphics[width=0.70\textwidth]{AppServer/z3}
+        \end{figure}
+
+        para hacer login, únicamente se solicitará nombre de usuario y
+        contraseña, en caso de fallo de autenticación, se desplegará un mensaje
+        como en la siguiente figura:
+
+        \begin{figure}[H]
+            \centering
+            \includegraphics[width=0.70\textwidth]{AppServer/z4}
+        \end{figure}
+
+        En el caso de un login exitoso, se despliega la siguiente vista de
+        usuario, donde se despliega su nombre.
+
+
+        \begin{figure}[H]
+            \centering
+            \includegraphics[width=0.70\textwidth]{AppServer/z5}
+        \end{figure}
+
+
+    \end{itemize}
+
+
+
+\end{enumerate}
 
 \end{document}
